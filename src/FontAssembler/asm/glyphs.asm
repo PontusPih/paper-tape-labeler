@@ -1,6 +1,7 @@
 / PDP-8/E PAPER TAPE LABELER
 
         AIX1=10             /SETUP AIX1
+        AIX2=11             /SETUP AIX2
 		
         *20                 /GLOBALS
 		
@@ -55,7 +56,8 @@ ROTPRT,	0
 		RTL					/ROT TO MSB
 		DCA ENDCHK			/STORE CHAR FOR END-CHECK
 		TAD ENDCHK			/FETCH IT
-		JMS TTYOUT			/PRINT IT
+		AND CHRMSK			/STRIP BITS 0-2
+		JMS DRAWBYTE			/PRINT IT
 		JMS ENDPRT			/LAST SEGMENT?
 		CLA CLL
 		JMP I ROTPRT		/LOOP
@@ -78,16 +80,38 @@ TTYIN,	0					/TTY INPUT SUB-ROUTINE
 
 
 TTYOUT,	0					/TTY OUTPUT SUB-ROUTINE
-		AND CHRMSK			/STRIP BITS 0-2
 		TLS					/WRITE ACC TO TTY
 		TSF					/TTY READY? SKIP! 
 		JMP .-1				/CHECK AGAIN
 		JMP I TTYOUT		/RETURN 
 
+TMPBYTE, 0
+LOOPI, 0
+DRAWBYTE, 0
+          RTR
+          BSW
+	  DCA TMPBYTE
+          TAD (-6)
+          DCA LOOPI
+          TAD TMPBYTE
+DRAWLOOP, RAL
+          DCA TMPBYTE
+          SZL
+          TAD ("*-040)
+	  TAD (040)
+          JMS TTYOUT
+	  CLL CLA
+	  TAD TMPBYTE
+          ISZ LOOPI
+          JMP DRAWLOOP
+	  CLA
+          TAD (012)
+	  JMS TTYOUT
+          JMP I DRAWBYTE
 
 / CODE BELOW THIS LINE IS AUTO-GENERATED. BEWARE!
 
-	*300
+	*400
 
 DIG0,  	3452
       	4635
@@ -110,7 +134,6 @@ DIG8,  	2452
 DIG9,  	0452
       	5235
 
-	*400
 
 LTRA,  	7412
       	1275
@@ -173,7 +196,6 @@ LTRZ,  	4262
       	5246
       	4300
 
-	*500
 
 SYMSPC,	0100
 SYMEXC,	5700
@@ -226,7 +248,6 @@ SYMCIR,	0402
 SYMULN,	4040
       	4041
 
-	*600
 
 LOOKUP,	SYMSPC
        	SYMEXC
